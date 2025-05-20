@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Connexion";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+<h2>Connexion</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" asp-controller="Auth" asp-action="Login">
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+    <div class="mb-3">
+        <label>Email</label>
+        <input name="email" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label>Mot de passe</label>
+        <input name="password" type="password" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Connexion</button>
+</form>
