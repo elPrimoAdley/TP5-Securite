@@ -85,7 +85,8 @@ public class AuthorizeController : Controller
         principal.SetResources("resource_server");
 
         // Ajoute le claim email (à inclure dans le JWT plus tard)
-        principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email);
+        //principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email);
+        principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
         
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }

@@ -33,12 +33,18 @@ builder.Services.AddOpenIddict()
         
         // Définit les URI des endpoints OAuth
         options.SetAuthorizationEndpointUris("/connect/authorize");
-        options.SetTokenEndpointUris("/connect/token");
+        options.SetTokenEndpointUris("/connect/token")
+            .SetConfigurationEndpointUris("/.well-known/openid-configuration");;
 
         options.UseAspNetCore()
             .EnableAuthorizationEndpointPassthrough()
             .EnableTokenEndpointPassthrough()
             .EnableStatusCodePagesIntegration();
+        
+        
+        options.AddEphemeralEncryptionKey()
+            .AddSigningKey(new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes("supersecretkey_for_token_signature")));
 
         options.AddEphemeralEncryptionKey()
             .AddEphemeralEncryptionKey()
@@ -46,9 +52,9 @@ builder.Services.AddOpenIddict()
         options.SetAccessTokenLifetime(TimeSpan.FromMinutes(2));
         options.SetRefreshTokenLifetime(TimeSpan.FromHours(24));
         //Signature des tokens
-        options.AddDevelopmentEncryptionCertificate()
-            .AddDevelopmentSigningCertificate();
-        
+        options.AddDevelopmentEncryptionCertificate();
+        //.AddDevelopmentSigningCertificate();
+
     })
     //Configure la validation des tokens
     .AddValidation(options =>
