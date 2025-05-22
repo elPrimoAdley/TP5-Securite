@@ -24,6 +24,8 @@ public class AuthController : Controller
 
     public async Task<IActionResult> Login(string email, string password, string returnUrl)
     {
+        ViewData["ReturnUrl"] = returnUrl;
+        
         var user = await _userManager.FindByEmailAsync(email);
         if (user != null)
         {
@@ -36,7 +38,8 @@ public class AuthController : Controller
             //Sauvegarder l'email de l'utilisateur dans les claims 
             await _signInManager.SignInWithClaimsAsync(user, false, new List<Claim>
             {
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+                new Claim("email", email)
             });
         }
 

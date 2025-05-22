@@ -12,14 +12,18 @@ builder.Services.AddAuthentication(options =>
 .AddOpenIdConnect("oidc", options =>
 {
     options.Authority = "http://localhost:5147"; // Adresse de ton serveur OAuth
-    options.ClientId = "web-client";              // Doit exister dans OpenIddict
-    options.ClientSecret = "secret-web";          // Doit �tre coh�rent avec ce que tu as configur�
+    options.ClientId = "web-client-v2";              // Doit exister dans OpenIddict
+    options.ClientSecret = "secret-web";
     options.ResponseType = "code";
     options.SaveTokens = true;
+    options.RequireHttpsMetadata = false;
 
     options.Scope.Clear();
+    options.Scope.Add("openid");          
     options.Scope.Add("email");
     options.Scope.Add("offline_access");
+    options.Scope.Add("profile");        
+    options.Scope.Add("api"); 
 
     options.GetClaimsFromUserInfoEndpoint = true;
 });
@@ -33,7 +37,6 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStaticFiles();
 app.UseAuthentication();
-app.UseAuthorization();
 
 app.UseRouting();
 

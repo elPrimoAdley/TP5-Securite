@@ -14,8 +14,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = "https://localhost:5001"; // URL du Auth Server
+        options.Authority = "http://localhost:5147"; // URL du Auth Server
         options.Audience = "resource_server"; // À faire correspondre avec ce que ton Auth Server émet
+        options.RequireHttpsMetadata = false;
+        options.Audience = "api";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience = true,
@@ -24,7 +26,7 @@ builder.Services.AddAuthentication("Bearer")
             //ValidIssuer = "https://localhost:5001",
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("supersecretkey_for_token_signature"))
+            //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("supersecretkey_for_token_signature"))
         };
     });
 
