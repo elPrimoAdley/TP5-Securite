@@ -1,0 +1,17 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+@if (User.Identity.IsAuthenticated)
+{
+    <h2>Bienvenue @User.Identity.Name</h2>
+    <p>Courriel : @User.FindFirst("email")?.Value</p>
+    <form asp-controller="Home" asp-action="Logout" method="post">
+        <button type="submit">Se déconnecter</button>
+    </form>
+}
+else
+{
+    <form asp-controller="Home" asp-action="Login" method="post">
+        <button type="submit">SE CONNECTER</button>
+    </form>
+}

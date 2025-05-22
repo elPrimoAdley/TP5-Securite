@@ -40,11 +40,13 @@ builder.Services.AddOpenIddict()
             .EnableAuthorizationEndpointPassthrough()
             .EnableTokenEndpointPassthrough()
             .EnableStatusCodePagesIntegration();
-        
-        
-        options.AddEphemeralEncryptionKey()
-            .AddSigningKey(new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("supersecretkey_for_token_signature")));
+
+
+        options.AddEphemeralEncryptionKey();
+        options.AddDevelopmentEncryptionCertificate();
+        options.AddDevelopmentSigningCertificate(); 
+            //.AddSigningKey(new SymmetricSecurityKey(
+            //    Encoding.UTF8.GetBytes("supersecretkey_for_token_signature")));
 
         options.AddEphemeralEncryptionKey()
             .AddEphemeralEncryptionKey()
@@ -95,5 +97,46 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string email = "test@demo.com";
+    string password = "Test123!";
+
+    var user = await userManager.FindByEmailAsync(email);
+    if (user == null)
+    {
+        user = new IdentityUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(user, password);
+        if (!result.Succeeded)
+        {
+            Console.WriteLine("Erreur lors de la création de l'utilisateur :");
+            foreach (var error in result.Errors)
+                Console.WriteLine($" - {error.Description}");
+        }
+        else
+        {
+            Console.WriteLine("Utilisateur de test créé avec succès.");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Utilisateur de test déjà présent.");
+    }
+    
+    
+}
+
 
 app.Run();
