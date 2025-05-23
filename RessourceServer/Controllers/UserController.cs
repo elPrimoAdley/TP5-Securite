@@ -23,6 +23,8 @@ public class UserController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
     {
+        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value 
+                         ?? User.FindFirst("email")?.Value;
         var email = User.Claims.FirstOrDefault(c => c.Type == OpenIddictConstants.Claims.Email)?.Value;
 
         //var email = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;

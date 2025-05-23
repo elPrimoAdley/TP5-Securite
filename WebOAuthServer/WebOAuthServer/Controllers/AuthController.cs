@@ -22,6 +22,7 @@ public class AuthController : Controller
         return View();
     }
 
+    [HttpPost]
     public async Task<IActionResult> Login(string email, string password, string returnUrl)
     {
         ViewData["ReturnUrl"] = returnUrl;
@@ -44,7 +45,7 @@ public class AuthController : Controller
         }
 
         ViewBag.Error = "email ou mot de passe invalide";
-        ViewBag["ReturnUrl"] = returnUrl;
+        ViewBag.ReturnUrl = returnUrl;
         return View();
     }
 }

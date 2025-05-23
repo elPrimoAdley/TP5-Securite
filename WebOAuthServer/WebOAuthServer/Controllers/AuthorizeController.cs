@@ -77,6 +77,8 @@ public class AuthorizeController : Controller
             return Challenge();
 
         var principal = await _signInManager.CreateUserPrincipalAsync(user);
+        
+        principal.SetClaim(OpenIddictConstants.Claims.Subject, user.Id);
 
         // Ajoute les scopes demandés
         principal.SetScopes(request.GetScopes());
@@ -86,7 +88,8 @@ public class AuthorizeController : Controller
 
         // Ajoute le claim email (à inclure dans le JWT plus tard)
         //principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email);
-        principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email, OpenIddictConstants.Destinations.AccessToken);
+        principal.SetClaim(OpenIddictConstants.Claims.Email, user.Email,
+            OpenIddictConstants.Destinations.AccessToken);
         
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }

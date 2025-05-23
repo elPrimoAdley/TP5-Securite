@@ -17,13 +17,13 @@ builder.Services.AddAuthentication("Bearer")
         options.Authority = "http://localhost:5147"; // URL du Auth Server
         options.Audience = "resource_server"; // À faire correspondre avec ce que ton Auth Server émet
         options.RequireHttpsMetadata = false;
-        options.Audience = "api";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience = true,
-            ValidAudience = "resource_server",
+            //ValidAudience = "resource_server",
             ValidateIssuer = false, //pour les test
             //ValidIssuer = "https://localhost:5001",
+            ValidAudience = "api",
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("supersecretkey_for_token_signature"))

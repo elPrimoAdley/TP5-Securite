@@ -36,9 +36,9 @@ builder.Services.AddOpenIddict()
         options.RegisterScopes("openid", "email", "profile", "api", "offline_access");
         
         // Définit les URI des endpoints OAuth
-        options.SetAuthorizationEndpointUris("/connect/authorize");
-        options.SetTokenEndpointUris("/connect/token")
-            .SetConfigurationEndpointUris("/.well-known/openid-configuration");;
+        options.SetAuthorizationEndpointUris("/authorize");
+        options.SetTokenEndpointUris("/connect/token");
+        options.SetConfigurationEndpointUris("/.well-known/openid-configuration");
 
         options.UseAspNetCore()
             .EnableAuthorizationEndpointPassthrough()
@@ -81,6 +81,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Auth/Login";
+    options.ReturnUrlParameter = "returnUrl"; 
+
 });
 
 var app = builder.Build();
@@ -105,121 +107,6 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-
-// TODO : Suppression User et applications dans le serveur Web
-/*using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    // Suppression des utilisateurs
-    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-    var users = userManager.Users.ToList();
-    foreach (var user in users)
-    {
-        var result = await userManager.DeleteAsync(user);
-        if (result.Succeeded)
-            Console.WriteLine($"Utilisateur supprimé : {user.Email}");
-    }
-
-    // Suppression des clients OpenIddict
-    var applicationManager = services.GetRequiredService<IOpenIddictApplicationManager>();
-    await foreach (var appToDelete in applicationManager.ListAsync())
-    {
-        var clientId = await applicationManager.GetClientIdAsync(appToDelete);
-        Console.WriteLine($"Suppression de l'application : {clientId}");
-        await applicationManager.DeleteAsync(appToDelete);
-    }
-
-    Console.WriteLine("Réinitialisation complète : utilisateurs et clients supprimés.");
-}
-*/
-
-//TODO : Ajout User et applications dans le serveur Web
-/*using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-
-    string email = "test1@demo.com";
-    string password = "Test1234!";
-
-    var user = await userManager.FindByEmailAsync(email);
-    if (user == null)
-    {
-        user = new IdentityUser
-        {
-            UserName = email,
-            Email = email,
-            EmailConfirmed = true
-        };
-
-        var result = await userManager.CreateAsync(user, password);
-        if (!result.Succeeded)
-        {
-            Console.WriteLine("Erreur lors de la création de l'utilisateur :");
-            foreach (var error in result.Errors)
-                Console.WriteLine($" - {error.Description}");
-        }
-        else
-        {
-            Console.WriteLine("Utilisateur de test créé avec succès.");
-        }
-    }
-    else
-    {
-        Console.WriteLine("Utilisateur de test déjà présent.");
-    }
-    
-    //POur enregistrer le client web 
-    var applicationManager = services.GetRequiredService<IOpenIddictApplicationManager>();
-
-    if (await applicationManager.FindByClientIdAsync("web-client-v2") is null)
-    {
-        await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
-        {
-            ClientId = "web-client-v2",
-            ClientSecret = "secret-web", // pour client confidentiel ; si client public, ne pas mettre
-            ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
-            DisplayName = "Client Web MVC",
-            RedirectUris =
-            {
-                new Uri("http://localhost:5174/signin-oidc")
-            },
-            PostLogoutRedirectUris =
-            {
-                new Uri("http://localhost:5174/signout-callback-oidc")
-            },
-            Permissions =
-            {
-                
-                OpenIddictConstants.Permissions.Endpoints.Authorization,
-                OpenIddictConstants.Permissions.Endpoints.Token,
-                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-                OpenIddictConstants.Permissions.ResponseTypes.Code,
-
-                // SCOPES autorisés
-                OpenIddictConstants.Permissions.Scopes.Email,
-                OpenIddictConstants.Permissions.Scopes.Profile,
-                OpenIddictConstants.Scopes.OfflineAccess,
-                OpenIddictConstants.Scopes.OpenId,
-                OpenIddictConstants.Permissions.Prefixes.Scope + "api"
-            },
-            Requirements =
-            {
-                OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange // PKCE
-            }
-        });
-
-        Console.WriteLine("Client web-client enregistré avec succès.");
-    }
-    else
-    {
-        Console.WriteLine("Client web-client déjà présent.");
-    }
-}*/
 
 using (var scope = app.Services.CreateScope())
 {
@@ -261,13 +148,13 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("Utilisateur de test déjà présent.");
         }
 
-        if (await applicationManager.FindByClientIdAsync("web-client-v2") is null)
+        if (await applicationManager.FindByClientIdAsync("web_client") is null)
         {
             await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
             {
-                ClientId = "web-client-v2",
+                ClientId = "web_client",
                 ClientSecret = "secret-web",
-                ClientType = OpenIddictConstants.ClientTypes.Confidential, // Ajouté
+                ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
                 DisplayName = "Client Web MVC",
                 RedirectUris =
@@ -312,7 +199,7 @@ using (var scope = app.Services.CreateScope())
                 DisplayName = "Desktop Client v2",
                 ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
 
-                ClientType = OpenIddictConstants.ClientTypes.Public, // Important : c’est une app desktop (pas de secret)
+                ClientType = OpenIddictConstants.ClientTypes.Public,
                 RedirectUris = { new Uri("http://127.0.0.1:7890/") }, // Port utilisé par SystemBrowser
 
                 Permissions =

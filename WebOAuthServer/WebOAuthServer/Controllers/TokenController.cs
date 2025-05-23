@@ -2,13 +2,89 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Abstractions;
+using OpenIddict.Server.AspNetCore;
 using WebOAuthServer.Models;
 
 namespace WebOAuthServer.Controllers;
 
+[ApiController]
+public class TokenController : Controller
+{
+    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<IdentityUser> _userManager;
+
+    public TokenController(
+        SignInManager<IdentityUser> signInManager,
+        UserManager<IdentityUser> userManager)
+    {
+        _signInManager = signInManager;
+        _userManager   = userManager;
+    }
+
+    [HttpPost("~/connect/token")]
+    public async Task<IActionResult> Exchange()
+    {
+        // 1) Récupère l’objet OpenIddictServerRequest
+        var request = HttpContext.GetOpenIddictServerRequest()
+                   ?? throw new InvalidOperationException("Requête introuvable.");
+
+        ClaimsPrincipal principal;
+
+        // 2) Selon le grant type, on reconstitue le principal
+        if (request.IsAuthorizationCodeGrantType())
+        {
+            // On valide le code via OpenIddict (il retrouve le principal original)
+            principal = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)
+                              .ContinueWith(t => t.Result.Principal);
+        }
+        else if (request.IsRefreshTokenGrantType())
+        {
+            // Même idée pour le refresh token
+            principal = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)
+                              .ContinueWith(t => t.Result.Principal);
+        }
+        else
+        {
+            return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        }
+
+        // 3) Récupère l’utilisateur pour ajouter des claims custom
+        var userId = principal.GetClaim(OpenIddictConstants.Claims.Subject);
+        var user   = await _userManager.FindByIdAsync(userId);
+
+        // 4) Crée un nouveau principal “rafraîchi”  
+        var newPrincipal = await _signInManager.CreateUserPrincipalAsync(user);
+
+        // Transfère les scopes et destinations
+        newPrincipal.SetScopes(principal.GetScopes());
+        newPrincipal.SetResources("resource_server");
+
+        // Ajoute un claim email dans l’Access Token
+        newPrincipal.SetClaim(
+            OpenIddictConstants.Claims.Email,
+            user.Email,
+            OpenIddictConstants.Destinations.AccessToken
+        );
+
+        // 5) Configure la durée des tokens si tu veux l’ajuster dynamiquement
+        var now = DateTimeOffset.UtcNow;
+        newPrincipal.SetAccessTokenLifetime(TimeSpan.FromMinutes(2));
+        newPrincipal.SetRefreshTokenLifetime(TimeSpan.FromHours(24));
+
+        // 6) Renvoie le SignIn principal : OpenIddict en fait le JSON
+        return SignIn(
+            newPrincipal,
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme
+        );
+    }
+}
 /*[Microsoft.AspNetCore.Components.Route("token")]
 [ApiController]
 public class TokenController : ControllerBase

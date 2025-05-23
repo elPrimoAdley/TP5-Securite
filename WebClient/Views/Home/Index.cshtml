@@ -3,11 +3,10 @@
 
 @if (User.Identity.IsAuthenticated)
 {
-    <h2>Bienvenue @User.Identity.Name</h2>
-    <p>Courriel : @User.FindFirst("email")?.Value</p>
-    <form asp-controller="Home" asp-action="Logout" method="post">
-        <button type="submit">Se déconnecter</button>
-    </form>
+    <h2>Bienvenue !</h2>
+
+    <p><strong>Nom :</strong> @User.Identity.Name</p>
+    <p><strong>Email récupéré depuis le Resource Server :</strong> @ViewData["userJson"]</p>
 }
 else
 {

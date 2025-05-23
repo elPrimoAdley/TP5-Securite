@@ -2,6 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -12,7 +13,7 @@ builder.Services.AddAuthentication(options =>
 .AddOpenIdConnect("oidc", options =>
 {
     options.Authority = "http://localhost:5147"; // Adresse de ton serveur OAuth
-    options.ClientId = "web-client-v2";              // Doit exister dans OpenIddict
+    options.ClientId = "web_client";              // Doit exister dans OpenIddict
     options.ClientSecret = "secret-web";
     options.ResponseType = "code";
     options.SaveTokens = true;
@@ -36,10 +37,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseStaticFiles();
-app.UseAuthentication();
-
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
